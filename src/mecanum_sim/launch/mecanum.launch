@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="verbose" default="false"/>
+  <!--<arg name="world_name" default="worlds/empty.world"/>-->
+  <arg name="world_name" default="$(find mecanum_sim)/worlds/mecanum_world.world"/>
+
+  <!-- set command arguments -->
+  <arg unless="$(arg paused)" name="command_arg1" value=""/>
+  <arg     if="$(arg paused)" name="command_arg1" value="-u"/>
+  <arg unless="$(arg headless)" name="command_arg2" value=""/>
+  <arg     if="$(arg headless)" name="command_arg2" value="-r"/>
+  <arg unless="$(arg verbose)" name="command_arg3" value=""/>
+  <arg     if="$(arg verbose)" name="command_arg3" value="--verbose"/>
+  <arg unless="$(arg debug)" name="script_type" value="gzserver"/>
+  <arg     if="$(arg debug)" name="script_type" value="debug"/>
+
+  <!-- start gazebo server-->
+  <node name="gazebo" pkg="gazebo_ros" type="$(arg script_type)" respawn="false" output="screen"
+	args="$(arg command_arg1) $(arg command_arg2) $(arg command_arg3) $(arg world_name)" />
+
+  <!-- start gazebo client -->
+  <group if="$(arg gui)">
+    <node name="gazebo_gui" pkg="gazebo_ros" type="gzclient" respawn="false" output="screen"/>
+  </group>
+
+  <!-- load URDF into the ROS parameter -->
+  <param name="robot_description"
+	 command="$(find xacro)/xacro.py '$(find mecanum_sim)/urdf/mecanum.xacro'" />
+
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+	args="-urdf -model mecanum -z 0.06 -param robot_description"/>
+
+  <!-- Robot state publisher -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" type="string" value="" />
+  </node>
+
+  <!-- Fake Calibration -->
+  <node pkg="rostopic" type="rostopic" name="fake_joint_calibration"
+        args="pub /calibrated std_msgs/Bool true" />
+
+  <!-- load joint_state_controller -->
+  <rosparam file="$(find mecanum_sim)/controller/joint_state_controller.yaml" command="load"/>
+  <node name="joint_state_controller_spawner" pkg="controller_manager" type="controller_manager" args="spawn joint_state_controller" respawn="false" output="screen"/>
+
+  <!-- load group_controller -->
+  <rosparam file="$(find mecanum_sim)/controller/mecanum_sim.yaml" command="load"/>
+  <node name="mecanum_controller_spawner" pkg="controller_manager" type="controller_manager" args="spawn mecanum_controller" respawn="false" output="screen"/>
+
+
+
+</launch>

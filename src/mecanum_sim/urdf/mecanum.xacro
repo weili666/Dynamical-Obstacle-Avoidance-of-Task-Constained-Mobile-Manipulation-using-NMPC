@@ -1,0 +1,344 @@
+<?xml version="1.0"?>
+
+<robot name="mecanum" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- include gazebo plugins -->
+  <xacro:include filename="$(find mecanum_sim)/urdf/mecanum.gazebo" />
+  <xacro:include filename="$(find mecanum_sim)/urdf/mecanum2.gazebo" />
+  <!--<xacro:include filename="$(find mecanum_sim)/urdf/mecanum.transmission.xacro" />-->
+  <!-- ur10 -->  
+  <xacro:include filename="$(find ur_description)/urdf/common.gazebo.xacro" />
+  <xacro:include filename="$(find ur_description)/urdf/ur10.urdf.xacro" />
+
+  <xacro:property name="base_width" value="0.52" />   <!-- 14.5 in -->
+  <xacro:property name="base_length" value="0.84" />  <!-- 21 5/8 in -->
+  <xacro:property name="base_height" value="0.27" />   <!-- 2.5 in  -->
+  <xacro:property name="wheel_radius" value="0.18" /> <!-- 4.0 in  -->
+  <xacro:property name="wheel_width" value="0.12" />  <!-- 3.0 in  -->
+  <xacro:property name="wheel_gap" value="0.08" />    <!-- 2.0 in  -->
+  <xacro:property name="wheel_setback" value="0.04" />    <!-- 1 5/8 in  -->
+  <xacro:property name="lidar_width" value="0.0508" />    <!-- 2.0 in  -->
+  <xacro:property name="lidar_length" value="0.0508" />    <!-- 2.0 in  -->
+  <xacro:property name="lidar_height" value="0.0762" />    <!-- 3.0 in  -->
+  <xacro:property name="lidar_setback" value="0.0127" />    <!-- 0.5 in  -->
+  <xacro:property name="dx" value="0.04" />    <!-- 0.5 in  -->
+  <xacro:property name="base_up" value="0.09" /> 
+
+  <xacro:property name="base_mass" value="300.0" /> 
+  <xacro:property name="wheel_mass" value="10.0" /> 
+
+  <!--~~~~~~~~~~~~~~~~~~~~~~~~ ~ ROBOT BASE ~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+  <link name="base_footprint">
+    <visual>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </visual>
+    <inertial>
+        <mass value="0.0001" />
+        <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+      </inertial>
+  </link>
+
+  <gazebo reference="base_footprint">
+    <material>Gazebo/Green</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link_0"/>
+    <origin xyz="0.0 0.0 ${base_up}" rpy="0 0 0"/>
+  </joint>
+  <!-- Make a box for robot base -->
+  <link name="base_link_0">
+
+  	<!-- Draw imaginary box around the robot for collision detection -->
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+       <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+    </collision>
+
+    <!-- Describe how to draw the box in 3d -->
+    <visual>
+      <origin xyz="0 0 ${base_up}" rpy="0 0 0"/>
+      <geometry>
+           <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+    
+    <inertial>
+      <mass value="${base_mass}" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="${(base_mass*(base_width*base_width+base_height*base_height)/12.0)}" ixy="0" ixz="0" iyy="${(base_mass*(base_length*base_length+base_height*base_height)/12.0)}" iyz="0" izz="${(base_mass*(base_width*base_width+base_length*base_length)/12.0)}" />
+    </inertial>
+  </link>
+
+  <gazebo reference="base_link_0">
+    <material>Gazebo/DarkGrey</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+  <!--~~~~~~~~~~~~~~~~~~~~~~~~ ~ ROBOT FLLINK ~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  <joint name="fl_joint" type="fixed">
+      <parent link="base_link_0"/>
+      <child link="fl_link"/>
+      <origin rpy="0 0 0" xyz="${base_length/2 - wheel_setback} ${base_width/2 + wheel_gap} 0.0"/>
+      <axis xyz="0 0 0"/>
+      <!-- <dynamics damping="1.0" friction="0.0" spring_stiffness="1" /> -->
+  </joint>
+
+
+  <link name="fl_link">
+      <visual>
+        <geometry>
+          <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+        </geometry>
+        <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+      </visual>
+
+      <collision>
+        <geometry>
+          <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+        </geometry>
+        <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+      </collision>
+    
+      <inertial>
+        <mass value="${wheel_mass}" />
+        <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+        <inertia ixx="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" ixy="0" ixz="0" iyy="${(wheel_mass*wheel_radius*wheel_radius)/2.0}" iyz="0" izz="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" />
+      </inertial>
+    </link>
+
+  <gazebo reference="fl_link">
+    <material>Gazebo/Black</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+  <!--~~~~~~~~~~~~~~~~~~~~~~~~ ~ ROBOT FRLINK ~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  <joint name="fr_joint" type="fixed">
+      <parent link="base_link_0"/>
+      <child link="fr_link"/>
+      <origin rpy="0 0 0" xyz="${base_length/2 - wheel_setback} ${-base_width/2 - wheel_gap} 0.0"/>
+      <axis xyz="0 0 0"/>
+      <!-- <dynamics damping="1.0" friction="0.0" spring_stiffness="1" /> -->
+  </joint>
+
+    <link name="fr_link">
+        <visual>
+          <geometry>
+            <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+          </geometry>
+          <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+        </visual>
+    
+        <collision>
+          <geometry>
+            <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+          </geometry>
+          <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+        </collision>
+    
+        <inertial>
+        <mass value="${wheel_mass}" />
+        <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+        <inertia ixx="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" ixy="0" ixz="0" iyy="${(wheel_mass*wheel_radius*wheel_radius)/2.0}" iyz="0" izz="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" />
+        </inertial>
+      </link>
+
+  <gazebo reference="fr_link">
+    <material>Gazebo/Black</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+  <!--~~~~~~~~~~~~~~~~~~~~~~~~ ~ ROBOT BLLINK ~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  <joint name="bl_joint" type="fixed">
+      <parent link="base_link_0"/>
+      <child link="bl_link"/>
+      <origin rpy="0 0 0" xyz="${-base_length/2 + wheel_setback} ${base_width/2 + wheel_gap} 0.0"/>
+      <axis xyz="0 0 0"/>
+      <!-- <dynamics damping="1.0" friction="0.0" spring_stiffness="1" /> -->
+  </joint>
+
+      <link name="bl_link">
+          <visual>
+            <geometry>
+              <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+            </geometry>
+            <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+          </visual>
+    
+          <collision>
+            <geometry>
+              <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+            </geometry>
+            <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+          </collision>
+    
+          <inertial>
+        <mass value="${wheel_mass}" />
+        <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+        <inertia ixx="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" ixy="0" ixz="0" iyy="${(wheel_mass*wheel_radius*wheel_radius)/2.0}" iyz="0" izz="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" />
+        </inertial>
+        </link>
+
+  <gazebo reference="bl_link">
+    <material>Gazebo/Black</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+  <!--~~~~~~~~~~~~~~~~~~~~~~~~ ~ ROBOT BRLINK ~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  <joint name="br_joint" type="fixed">
+      <parent link="base_link_0"/>
+      <child link="br_link"/>
+      <origin rpy="0 0 0" xyz="${-base_length/2 + wheel_setback} ${-base_width/2 - wheel_gap} 0.0"/>
+      <axis xyz="0 0 0"/>
+      <!-- <dynamics damping="1.0" friction="0.0" spring_stiffness="1" /> -->
+  </joint>
+
+        <link name="br_link">
+            <visual>
+              <geometry>
+                <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+              </geometry>
+              <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+            </visual>
+    
+            <collision>
+              <geometry>
+                <cylinder length="${wheel_width}" radius="${wheel_radius}"/>
+              </geometry>
+              <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+            </collision>
+    
+           <inertial>
+        <mass value="${wheel_mass}" />
+        <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+        <inertia ixx="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" ixy="0" ixz="0" iyy="${(wheel_mass*wheel_radius*wheel_radius)/2.0}" iyz="0" izz="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" />
+        </inertial>
+          </link>
+
+  <gazebo reference="br_link">
+    <material>Gazebo/Black</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+
+  <!--~~~~~~~~~~~~~~~~~~~~~~~ Arm ~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  <!-- arm -->
+  <xacro:ur10_robot prefix="" joint_limited="false"/>
+
+  <joint name="ur10_arm_base" type="fixed">
+    <parent link="base_link_0" />
+    <child link = "base_link" />
+    <origin xyz="0.20 0.0 0.23" rpy="0.0 0.0 0.0" />
+  </joint>
+
+  <!--~~~~~~~~~~~~~~~~~~~~~~~ ~ Lidar ~1~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+  <link name="laser_link">
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+       <box size="${lidar_length} ${lidar_width} ${lidar_height}"/>
+      </geometry>
+    </collision>
+    
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+           <box size="${lidar_length} ${lidar_width} ${lidar_height}"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+    
+    <inertial>
+      <mass value="1e-4" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="joint1" type="fixed">      <!-- Fused connection? (using continuous tilts view)-->
+    <parent link="base_link_0"/>            <!--      robot link = parent     -->
+    <child link="laser_link"/>     <!-- forward camera link = child  -->
+    <origin xyz="${base_length/2 - wheel_setback + wheel_radius + dx} -${base_width/2 + wheel_gap + wheel_width/2 + dx} ${lidar_height}" rpy="0 0 0"/>   <!-- where child is relative to parent -->
+    <axis xyz="0 0 0"/>                   <!-- ...describes the axis of rotation? -->
+  </joint>
+
+ <!--~~~~~~~~~~~~~~~~~~~~~~~ ~ Lidar ~2~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+  <link name="laser_link_2">
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+       <box size="${lidar_length} ${lidar_width} ${lidar_height}"/>
+      </geometry>
+    </collision>
+    
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+           <box size="${lidar_length} ${lidar_width} ${lidar_height}"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+    
+    <inertial>
+      <mass value="1e-4" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="joint2" type="fixed">      <!-- Fused connection? (using continuous tilts view)-->
+    <parent link="base_link_0"/>            <!--      robot link = parent     -->
+    <child link="laser_link_2"/>     <!-- forward camera link = child  -->
+    <origin xyz="-${base_length/2 - wheel_setback + wheel_radius + dx} ${base_width/2 + wheel_gap + wheel_width/2 + dx} ${lidar_height}" rpy="0 0 0"/>   <!-- where child is relative to parent -->
+    <axis xyz="0 0 0"/>                   <!-- ...describes the axis of rotation? -->
+  </joint>
+
+ <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+
+
+
+</robot>

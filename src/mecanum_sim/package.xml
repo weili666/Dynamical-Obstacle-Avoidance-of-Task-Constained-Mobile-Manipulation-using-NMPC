@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <name>mecanum_sim</name>
+  <version>1.1.6</version>
+  <description>Simple mecanum robot simulation</description>
+  <maintainer email="li_wei_666@163.com">Wei Li</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <run_depend>gazebo_ros</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+
+  <export>
+  </export>
+</package>

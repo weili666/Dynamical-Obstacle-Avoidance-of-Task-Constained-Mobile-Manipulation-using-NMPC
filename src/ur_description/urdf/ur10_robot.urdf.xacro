@@ -1,0 +1,362 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       name="ur10" >
+
+  <xacro:property name="base_width" value="0.52" />   <!-- 14.5 in -->
+  <xacro:property name="base_length" value="0.84" />  <!-- 21 5/8 in -->
+  <xacro:property name="base_height" value="0.27" />   <!-- 2.5 in  -->
+  <xacro:property name="wheel_radius" value="0.18" /> <!-- 4.0 in  -->
+  <xacro:property name="wheel_width" value="0.12" />  <!-- 3.0 in  -->
+  <xacro:property name="wheel_gap" value="0.12" />    <!-- 2.0 in  -->
+  <xacro:property name="wheel_setback" value="0.04" />    <!-- 1 5/8 in  -->
+  <xacro:property name="lidar_width" value="0.0508" />    <!-- 2.0 in  -->
+  <xacro:property name="lidar_length" value="0.0508" />    <!-- 2.0 in  -->
+  <xacro:property name="lidar_height" value="0.0762" />    <!-- 3.0 in  -->
+  <xacro:property name="lidar_setback" value="0.0127" />    <!-- 0.5 in  -->
+  <xacro:property name="scale" value="3" /> 
+  <xacro:property name="dx" value="0.04" />    <!-- 0.5 in  -->
+  <xacro:property name="base_up" value="0.09" /> 
+  <xacro:property name="camera_height" value="1.3" />
+  <xacro:property name="camera_radius" value="0.17" /> 
+
+  <xacro:property name="base_0_mass" value="100.0" /> 
+  <xacro:property name="wheel_mass" value="10.0" /> 
+
+  <!-- common stuff -->
+  <xacro:include filename="$(find ur_description)/urdf/common.gazebo.xacro" />
+  <xacro:include filename="$(find multi_kinect_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find multi_kinect_description)/urdf/sensor/kinect.urdf.xacro"/>
+  <xacro:include filename="$(find multi_kinect_description)/urdf/sensor/kinect.gazebo.xacro"/>
+
+  <!-- ur10 -->
+  <xacro:include filename="$(find ur_description)/urdf/ur10.urdf.xacro" />
+
+  <!-- arm -->
+  <xacro:ur10_robot prefix="" joint_limited="false"/>
+
+<xacro:macro name="transmission_block" params="trans_name joint_name actuator_name">
+	  <transmission name="${trans_name}">
+	    <type>transmission_interface/SimpleTransmission</type>
+	    <joint name="${joint_name}">
+	      <hardwareInterface>PositionJointInterface</hardwareInterface>
+	    </joint>
+	    <actuator name="${actuator_name}">
+	      <hardwareInterface>PositionJointInterface</hardwareInterface>
+	      <mechanicalReduction>1</mechanicalReduction>
+	    </actuator>
+	  </transmission>
+</xacro:macro>
+
+ <link name="base_link_0">
+
+  	<!-- Draw imaginary box around the robot for collision detection -->
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+       <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+    </collision>
+
+    <!-- Describe how to draw the box in 3d -->
+    <visual>
+      <origin xyz="0 0 ${base_up}" rpy="0 0 0"/>
+      <geometry>
+           <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+    
+    <inertial>
+      <mass value="${base_0_mass}" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="${(base_mass*(base_width*base_width+base_height*base_height)/12.0)}" ixy="0" ixz="0" iyy="${(base_mass*(base_length*base_length+base_height*base_height)/12.0)}" iyz="0" izz="${(base_mass*(base_width*base_width+base_length*base_length)/12.0)}" />
+    </inertial>
+  </link>
+
+  <gazebo reference="base_link_0">
+    <material>Gazebo/DarkGrey</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+  <!-- connect with fl wheel -->
+
+ <joint name="fl_joint" type="continuous">
+      <parent link="base_link_0"/>
+      <child link="wheel_link_fl"/>
+      <origin rpy=" 1.570800 0 0 " xyz="${base_length/2 - wheel_setback} ${base_width/2 + wheel_gap} 0.0"/>
+      <axis xyz="0 0 1"/>
+      <!-- <dynamics damping="1.0" friction="0.0" spring_stiffness="1" /> -->
+     
+  </joint>
+
+<link name="wheel_link_fl">
+     <inertial>
+      <mass value="${wheel_mass}" />
+      <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+      
+          <inertia ixx="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" ixy="0" ixz="0" iyy="${(wheel_mass*wheel_radius*wheel_radius)/2.0}" iyz="0" izz="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" />
+
+      </inertial>
+
+      <visual>
+        <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mecanum_sim/meshes/base/front-left_wheel.dae" scale="${scale} ${scale} ${scale}"/>
+        </geometry>
+       <material name="carbon_fiber">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+      </material>
+      </visual>     
+
+      <collision>
+      <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://mecanum_sim/meshes/base/front-left_wheel.dae" scale="${scale} ${scale} ${scale}"/>
+      </geometry>
+    </collision>
+      
+</link>
+
+  <gazebo reference="wheel_link_fl">
+    <material>Gazebo/Red</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+ <!-- connect with fr wheel -->
+
+ <joint name="fr_joint" type="continuous">
+      <parent link="base_link_0"/>
+      <child link="wheel_link_fr"/>
+      <origin rpy=" 1.570800 0 0 " xyz="${base_length/2 - wheel_setback} ${-base_width/2 - wheel_gap} 0.0"/>
+      <axis xyz="0 0 1"/>
+      <!-- <dynamics damping="1.0" friction="0.0" spring_stiffness="1" /> -->
+      
+  </joint>
+
+<link name="wheel_link_fr">
+     <inertial>
+      <mass value="${wheel_mass}" />
+      <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+      
+          <inertia ixx="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" ixy="0" ixz="0" iyy="${(wheel_mass*wheel_radius*wheel_radius)/2.0}" iyz="0" izz="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" />
+
+      </inertial>
+
+      <visual>
+        <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mecanum_sim/meshes/base/front-right_wheel.dae" scale="${scale} ${scale} ${scale}"/>
+        </geometry>
+       <material name="carbon_fiber">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+      </material>
+      </visual>     
+
+      <collision>
+      <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://mecanum_sim/meshes/base/front-right_wheel.dae" scale="${scale} ${scale} ${scale}"/>
+      </geometry>
+    </collision>
+      
+</link>
+
+  <gazebo reference="wheel_link_fr">
+    <material>Gazebo/Red</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+ <!-- connect with bl wheel -->
+
+ <joint name="bl_joint" type="continuous">
+      <parent link="base_link_0"/>
+      <child link="wheel_link_bl"/>
+      <origin rpy=" 1.570800 0 0 " xyz="${-base_length/2 + wheel_setback} ${base_width/2 + wheel_gap} 0.0"/>
+      <axis xyz="0 0 1"/>
+      <!-- <dynamics damping="1.0" friction="0.0" spring_stiffness="1" /> -->
+      
+  </joint>
+
+<link name="wheel_link_bl">
+     <inertial>
+      <mass value="${wheel_mass}" />
+      <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+      
+          <inertia ixx="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" ixy="0" ixz="0" iyy="${(wheel_mass*wheel_radius*wheel_radius)/2.0}" iyz="0" izz="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" />
+
+      </inertial>
+
+      <visual>
+        <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mecanum_sim/meshes/base/back-left_wheel.dae" scale="${scale} ${scale} ${scale}"/>
+        </geometry>
+       <material name="carbon_fiber">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+      </material>
+      </visual>     
+
+      <collision>
+      <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://mecanum_sim/meshes/base/back-left_wheel.dae" scale="${scale} ${scale} ${scale}"/>
+      </geometry>
+    </collision>
+      
+</link>
+
+  <gazebo reference="wheel_link_bl">
+    <material>Gazebo/Red</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+<!-- connect with br wheel -->
+
+ <joint name="br_joint" type="continuous">
+      <parent link="base_link_0"/>
+      <child link="wheel_link_br"/>
+      <origin rpy=" 1.570800 0 0 " xyz="${-base_length/2 + wheel_setback} ${-base_width/2 - wheel_gap} 0.0"/>
+      <axis xyz="0 0 1"/>
+      <!-- <dynamics damping="1.0" friction="0.0" spring_stiffness="1" /> -->
+      
+  </joint>
+
+<link name="wheel_link_br">
+     <inertial>
+      <mass value="${wheel_mass}" />
+      <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+      
+          <inertia ixx="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" ixy="0" ixz="0" iyy="${(wheel_mass*wheel_radius*wheel_radius)/2.0}" iyz="0" izz="${(wheel_mass*wheel_radius*wheel_radius)/4.0+(wheel_mass*wheel_width*wheel_width)/3.0}" />
+
+      </inertial>
+
+      <visual>
+        <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mecanum_sim/meshes/base/back-right_wheel.dae" scale="${scale} ${scale} ${scale}"/>
+        </geometry>
+       <material name="carbon_fiber">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+      </material>
+      </visual>     
+
+      <collision>
+      <origin rpy="1.570800 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://mecanum_sim/meshes/base/back-right_wheel.dae" scale="${scale} ${scale} ${scale}"/>
+      </geometry>
+    </collision>
+      
+</link>
+
+  <gazebo reference="wheel_link_br">
+    <material>Gazebo/Red</material>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.3</maxVel>
+    <fdir1>1 0 0</fdir1>
+  </gazebo>
+
+  <!-- connect with arm -->
+  <joint name="arm_joint" type="fixed">
+    <parent link="base_link_0" />
+    <child link = "base_link" />
+    <origin xyz="0.20 0.0 0.23" rpy="0.0 0.0 0.0" />
+  </joint>
+
+
+  <!-- connect with camera -->
+
+
+  <xacro:kinect_joints suffix="/kinect_first" rpy="0 0 0" xyz="${camera_radius} 0 ${camera_height}"/>
+  <xacro:kinect_joints suffix="/kinect_second" rpy="0 0 ${90*M_PI/180}" xyz="0  ${camera_radius}  ${camera_height}"/>
+  <xacro:kinect_joints suffix="/kinect_third" rpy="0 0 ${180*M_PI/180}" xyz="-${camera_radius} 0 ${camera_height}"/>
+  <xacro:kinect_joints suffix="/kinect_fouth" rpy="0 0 -${90*M_PI/180}" xyz="0 -${camera_radius} ${camera_height}"/>
+
+  <joint name="support_camera_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="base_link_0"/>
+      <child link="support_cylinder"/>
+    </joint>
+  
+  <link name="support_cylinder">
+    <collision>
+      <origin xyz="0 0 ${0.5*camera_height+0.23}" rpy="0 0 0"/>
+      <geometry>
+       <cylinder length="${camera_height}" radius="0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 ${0.5*camera_height+0.23}" rpy="0 0 0"/>
+      <geometry>
+           <cylinder length="${camera_height}" radius="0.01"/>
+      </geometry>
+      <material name="LightGrey">
+          <color rgba="0.7 0.7 0.7 1.0"/>
+       </material>
+    </visual>
+    
+  </link>
+
+  <gazebo reference="support_cylinder">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+
+   <xacro:transmission_block trans_name="fl_link_transmission" joint_name="fl_joint" actuator_name="fl_link_motor" />
+   <xacro:transmission_block trans_name="fr_link_transmission" joint_name="fr_joint" actuator_name="fr_link_motor" />
+   <xacro:transmission_block trans_name="bl_link_transmission" joint_name="bl_joint" actuator_name="bl_link_motor" />
+   <xacro:transmission_block trans_name="br_link_transmission" joint_name="br_joint" actuator_name="br_link_motor" />
+  
+
+
+<!-- Drive controller -->
+
+<!-- Drive controller -->
+ <gazebo>
+  <plugin name="skid_steer_drive_controller" filename="libgazebo_ros_planar_move.so">
+    <updateRate>100.0</updateRate>
+    <robotNamespace></robotNamespace>
+    <leftFrontJoint>fl_joint</leftFrontJoint>
+    <rightFrontJoint>fr_joint</rightFrontJoint>
+    <leftRearJoint>bl_joint</leftRearJoint>
+    <rightRearJoint>br_joint</rightRearJoint>
+    <wheelSeparation>4</wheelSeparation>
+    <wheelDiameter>0.1</wheelDiameter>
+    <commandTopic>cmd_vel</commandTopic>
+    <odometryTopic>odom</odometryTopic>
+    <robotBaseFrame>base_footprint</robotBaseFrame>
+    <odometryFrame>odom</odometryFrame>
+    <torque>1</torque>
+    <topicName>cmd_vel</topicName>
+    <broadcastTF>1</broadcastTF>
+  </plugin>
+</gazebo>
+</robot>

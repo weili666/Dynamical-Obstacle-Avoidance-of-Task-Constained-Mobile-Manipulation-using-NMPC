@@ -1,0 +1,17 @@
+base_controller:
+  type: velocity_controllers/JointTrajectoryController
+  joints:
+     - fl_joint
+     - fr_joint
+     - bl_joint
+     - br_joint
+  constraints:
+      goal_time: 0.6
+      stopped_velocity_tolerance: 0.05
+      fl_joint: {p: 1000.0, i: 0.0, d: 0.1, i_clamp: 0.0}
+      fr_joint: {p: 1000.0, i: 0.0, d: 0.1, i_clamp: 0.0}
+      bl_joint: {p: 1000.0, i: 0.0, d: 0.1, i_clamp: 0.0}
+      br_joint: {p: 1000.0, i: 0.0, d: 0.1, i_clamp: 0.0}
+  stop_trajectory_duration: 0.5
+  state_publish_rate:  25
+  action_monitor_rate: 10

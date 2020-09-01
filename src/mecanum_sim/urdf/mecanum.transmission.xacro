@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <transmission name="fl_link_transmission"> 
+    <type>transmission_interface/SimpleTransmission</type> 
+    <joint name="fl_joint">
+      <hardwareInterface>PositionJointInterface</hardwareInterface> 
+    </joint> 
+    <actuator name="fl_link_motor"> 
+      <mechanicalReducction>1</mechanicalReducction> 
+    </actuator> 
+  </transmission>
+
+  <transmission name="fr_link_transmission"> 
+    <type>transmission_interface/SimpleTransmission</type> 
+    <joint name="fr_joint">
+      <hardwareInterface>PositionJointInterface</hardwareInterface> 
+    </joint> 
+    <actuator name="fr_link_motor"> 
+      <mechanicalReducction>1</mechanicalReducction> 
+    </actuator> 
+  </transmission>
+
+ <transmission name="bl_link_transmission"> 
+    <type>transmission_interface/SimpleTransmission</type> 
+    <joint name="bl_joint">
+      <hardwareInterface>PositionJointInterface</hardwareInterface> 
+    </joint> 
+    <actuator name="bl_link_motor"> 
+      <mechanicalReducction>1</mechanicalReducction> 
+    </actuator> 
+  </transmission>
+
+  <transmission name="br_link_transmission"> 
+    <type>transmission_interface/SimpleTransmission</type> 
+    <joint name="br_joint">
+      <hardwareInterface>PositionJointInterface</hardwareInterface> 
+    </joint> 
+    <actuator name="br_link_motor"> 
+      <mechanicalReducction>1</mechanicalReducction> 
+    </actuator> 
+  </transmission>
+</robot>

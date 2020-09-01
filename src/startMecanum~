@@ -1,0 +1,12 @@
+roslaunch mecanum_sim mecanum.launch
+roslaunch mecanum_moveit_config mecanum_moveit_planning_execution.launch sim:=true
+roslaunch mecanum_moveit_config moveit_rviz.launch config:=true
+rosrun mecanum_sim test_node
+rosrun mecanum_sim step_server_node
+rosrun mecanum_sim network.py
+
+rosrun mecanum_sim test_cylinder
+rosrun mecanum_sim test.py
+
+rosrun mecanum_sim nmpc_server_node
+rosrun mecanum_sim nmpc_client_node

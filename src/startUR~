@@ -1,0 +1,6 @@
+roslaunch ur_gazebo ur10.launch
+roslaunch ur10_moveit_config ur10_moveit_planning_execution.launch sim:=true
+roslaunch ur10_moveit_config moveit_rviz.launch config:=true
+
+rosrun mecanum_sim test_node
+rosrun mecanum_sim nmpc_move_node

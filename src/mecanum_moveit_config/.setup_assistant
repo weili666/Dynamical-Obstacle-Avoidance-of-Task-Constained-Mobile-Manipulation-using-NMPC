@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: mecanum_sim
+    relative_path: urdf/mecanum.xacro
+    xacro_args: "--inorder "
+  SRDF:
+    relative_path: config/mecanum.srdf
+  CONFIG:
+    author_name: weili666
+    author_email: li_wei_666@163.com
+    generated_timestamp: 1547268926
